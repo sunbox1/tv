@@ -1,6 +1,8 @@
 name: Process TV URLs
 
 on:
+  schedule:
+    - cron: '1 22 * * *'
   push:
     paths:
       - 'itvlist.txt'
