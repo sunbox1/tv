@@ -8,36 +8,37 @@ def process_url(url):
     if 'rtsp://' in url.lower():
         url = re.sub(r'^.*?(?=rtsp://)', '', url, flags=re.IGNORECASE)
     
-    # 处理 rtp/udp 协议（删除 / 后面的 @）
+    # 处理 rtp/udp 协议（删除 / 后面的 @ 并在前面添加 /）
     elif any(proto in url.lower() for proto in ['rtp://', 'udp://']):
+        # 删除 / 后面的 @
         url = re.sub(r'(?<=/)(@)', '', url, flags=re.IGNORECASE)
+        # 确保以 / 开头
+        if not url.startswith('/'):
+            url = '/' + url
     
-    return url  # 不再使用 strip() 避免破坏原有格式
+    return url
 
 def process_file(input_file, output_file):
     with open(input_file, 'r', encoding='utf-8') as f:
-        lines = f.readlines()  # 这会保留每行末尾的 \n
+        lines = f.readlines()
     
     processed_lines = []
     for line in lines:
-        # 直接保留空行和注释行（包括它们的原始换行符）
+        # 跳过空行和注释行
         if not line.strip() or line.strip().startswith('#'):
             processed_lines.append(line)
             continue
         
-        # 分割频道名和URL（注意保留右侧原始换行符）
+        # 分割频道名和URL
         if ',' in line:
-            parts = line.split(',', 1)
-            channel = parts[0]
-            url = parts[1] if len(parts) > 1 else ''
+            channel, url = line.split(',', 1)
             processed_url = process_url(url)
-            # 重新组合时保留原始行尾的 \n
             processed_lines.append(f"{channel},{processed_url}")
         else:
             processed_lines.append(line)
     
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.writelines(processed_lines)  # 使用 writelines 保留所有换行符
+        f.writelines(processed_lines)
 
 if __name__ == "__main__":
     input_file = "itvlist.txt"
