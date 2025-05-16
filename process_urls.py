@@ -12,29 +12,32 @@ def process_url(url):
     elif any(proto in url.lower() for proto in ['rtp://', 'udp://']):
         url = re.sub(r'(?<=/)(@)', '', url, flags=re.IGNORECASE)
     
-    return url.strip()
+    return url  # 不再使用 strip() 避免破坏原有格式
 
 def process_file(input_file, output_file):
     with open(input_file, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
+        lines = f.readlines()  # 这会保留每行末尾的 \n
     
     processed_lines = []
     for line in lines:
-        # 跳过空行和注释行
+        # 直接保留空行和注释行（包括它们的原始换行符）
         if not line.strip() or line.strip().startswith('#'):
             processed_lines.append(line)
             continue
         
-        # 分割频道名和URL
+        # 分割频道名和URL（注意保留右侧原始换行符）
         if ',' in line:
-            channel, url = line.split(',', 1)
+            parts = line.split(',', 1)
+            channel = parts[0]
+            url = parts[1] if len(parts) > 1 else ''
             processed_url = process_url(url)
+            # 重新组合时保留原始行尾的 \n
             processed_lines.append(f"{channel},{processed_url}")
         else:
             processed_lines.append(line)
     
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.writelines(processed_lines)
+        f.writelines(processed_lines)  # 使用 writelines 保留所有换行符
 
 if __name__ == "__main__":
     input_file = "itvlist.txt"
