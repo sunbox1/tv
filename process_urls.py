@@ -1,17 +1,18 @@
 import re
 
-def process_line(line):
-    # 处理 rtsp 开头的行
-    if 'rtsp://' in line.lower():
-        # 找到 http 到 rtsp 的部分并删除
-        line = re.sub(r'^.*?(?=rtsp://)', '', line, flags=re.IGNORECASE)
+def process_url(url):
+    # 先统一删除 /iptv/live/1000.json?key=txiptv
+    url = re.sub(r'/iptv/live/1000\.json\?key=txiptv', '', url, flags=re.IGNORECASE)
     
-    # 处理 rtp 或 udp 开头的行
-    elif any(proto in line.lower() for proto in ['rtp://', 'udp://']):
-        # 删除 / 后面的 @ 符号
-        line = re.sub(r'(?<=/)(@)', '', line, flags=re.IGNORECASE)
+    # 处理 rtsp 协议（删除 http 到 rtsp 的部分）
+    if 'rtsp://' in url.lower():
+        url = re.sub(r'^.*?(?=rtsp://)', '', url, flags=re.IGNORECASE)
     
-    return line.strip()
+    # 处理 rtp/udp 协议（删除 / 后面的 @）
+    elif any(proto in url.lower() for proto in ['rtp://', 'udp://']):
+        url = re.sub(r'(?<=/)(@)', '', url, flags=re.IGNORECASE)
+    
+    return url.strip()
 
 def process_file(input_file, output_file):
     with open(input_file, 'r', encoding='utf-8') as f:
@@ -27,8 +28,8 @@ def process_file(input_file, output_file):
         # 分割频道名和URL
         if ',' in line:
             channel, url = line.split(',', 1)
-            processed_url = process_line(url)
-            processed_lines.append(f"{channel},{processed_url}\n")
+            processed_url = process_url(url)
+            processed_lines.append(f"{channel},{processed_url}")
         else:
             processed_lines.append(line)
     
