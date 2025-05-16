@@ -8,13 +8,12 @@ def process_url(url):
     if 'rtsp://' in url.lower():
         url = re.sub(r'^.*?(?=rtsp://)', '', url, flags=re.IGNORECASE)
     
-    # 处理 rtp/udp 协议（删除 / 后面的 @ 并在前面添加 /）
+    # 处理 rtp/udp 协议（在协议前添加 /，并删除 / 后面的 @）
     elif any(proto in url.lower() for proto in ['rtp://', 'udp://']):
         # 删除 / 后面的 @
         url = re.sub(r'(?<=/)(@)', '', url, flags=re.IGNORECASE)
-        # 确保以 / 开头
-        if not url.startswith('/'):
-            url = '/' + url
+        # 在 rtp:// 或 udp:// 前添加 /（但不在开头添加）
+        url = re.sub(r'(?<!:)(rtp://|udp://)', r'/\1', url, flags=re.IGNORECASE)
     
     return url
 
