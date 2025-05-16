@@ -10,10 +10,12 @@ def process_url(url):
     
     # 处理 rtp/udp 协议（在协议前添加 /，并删除 / 后面的 @）
     elif any(proto in url.lower() for proto in ['rtp://', 'udp://']):
-        # 删除 / 后面的 @
+        # 将 rtp:// 或 udp:// 替换为 rtp/ 或 udp/
+        url = re.sub(r'(rtp|udp)://', r'\1/', url, flags=re.IGNORECASE)
+        # 删除 / 后面的 @（如果有）
         url = re.sub(r'(?<=/)(@)', '', url, flags=re.IGNORECASE)
-        # 在 rtp:// 或 udp:// 前添加 /（但不在开头添加）
-        url = re.sub(r'(?<!:)(rtp://|udp://)', r'/\1', url, flags=re.IGNORECASE)
+        # 在 rtp/ 或 udp/ 前添加 /（但不在开头添加）
+        url = re.sub(r'(?<!:)(rtp/|udp/)', r'/\1', url, flags=re.IGNORECASE)
     
     return url
 
