@@ -1,14 +1,39 @@
 import re
 
+def process_line(line):
+    # 处理 rtsp 开头的行
+    if 'rtsp://' in line.lower():
+        # 找到 http 到 rtsp 的部分并删除
+        line = re.sub(r'^.*?(?=rtsp://)', '', line, flags=re.IGNORECASE)
+    
+    # 处理 rtp 或 udp 开头的行
+    elif any(proto in line.lower() for proto in ['rtp://', 'udp://']):
+        # 删除 / 后面的 @ 符号
+        line = re.sub(r'(?<=/)(@)', '', line, flags=re.IGNORECASE)
+    
+    return line.strip()
+
 def process_file(input_file, output_file):
     with open(input_file, 'r', encoding='utf-8') as f:
-        content = f.read()
+        lines = f.readlines()
     
-    # 使用正则表达式替换目标字符串
-    processed_content = re.sub(r'/iptv/live/1000\.json\?key=txiptv', '', content)
+    processed_lines = []
+    for line in lines:
+        # 跳过空行和注释行
+        if not line.strip() or line.strip().startswith('#'):
+            processed_lines.append(line)
+            continue
+        
+        # 分割频道名和URL
+        if ',' in line:
+            channel, url = line.split(',', 1)
+            processed_url = process_line(url)
+            processed_lines.append(f"{channel},{processed_url}\n")
+        else:
+            processed_lines.append(line)
     
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(processed_content)
+        f.writelines(processed_lines)
 
 if __name__ == "__main__":
     input_file = "itvlist.txt"
